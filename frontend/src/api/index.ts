@@ -1,4 +1,10 @@
-const BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8787/api'
+let baseUrl = import.meta.env.VITE_API_URL || 'http://localhost:8787'
+// Ensure the base URL is absolute if it looks like a domain
+if (baseUrl && !baseUrl.startsWith('http') && !baseUrl.startsWith('/')) {
+  baseUrl = `https://${baseUrl}`
+}
+// Remove trailing slash if present
+const BASE_URL = baseUrl.endsWith('/') ? baseUrl.slice(0, -1) : baseUrl
 
 export async function request(path: string, options: RequestInit = {}) {
   const token = localStorage.getItem('swiftpay_token')
@@ -11,21 +17,36 @@ export async function request(path: string, options: RequestInit = {}) {
     headers.set('Content-Type', 'application/json')
   }
 
-  const response = await fetch(`${BASE_URL}${path}`, {
-    ...options,
-    headers
-  })
+  let response;
+  try {
+    response = await fetch(`${BASE_URL}${path}`, {
+      ...options,
+      headers
+    });
+  } catch (error) {
+    console.error('Fetch error:', error);
+    throw new Error('Network error: Could not reach the server.');
+  }
+
+  const contentType = response.headers.get('content-type');
+  let data;
+
+  if (contentType && contentType.includes('application/json')) {
+    data = await response.json();
+  } else {
+    const text = await response.text();
+    console.error('Non-JSON response received:', text);
+    throw new Error(`Server Error: Received unexpected response format (Status: ${response.status})`);
+  }
 
   if (response.status === 401 && !path.includes('/auth/')) {
     localStorage.removeItem('swiftpay_token');
     window.location.href = '/login';
   }
 
-  const data = await response.json()
-
   if (!response.ok) {
-    throw new Error(data.message || 'Something went wrong')
+    throw new Error(data.message || data.error || 'Something went wrong');
   }
 
-  return data
+  return data;
 }
