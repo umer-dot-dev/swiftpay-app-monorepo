@@ -11,37 +11,21 @@ import notifications from './routes/notifications'
 const app = new Hono<{ Bindings: Bindings }>()
 
 // Middleware
-app.use('*', cors({
-  origin: '*',
-  allowMethods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-  allowHeaders: ['Content-Type', 'Authorization'],
-  exposeHeaders: ['Content-Length'],
-  maxAge: 600,
-  credentials: true,
-}))
-
-// Global Error Handler
-app.onError((err, c) => {
-  console.error(`[Error]: ${err.message}`)
-  return c.json({
-    error: 'Internal Server Error',
-    message: err.message,
-    stack: process.env.NODE_ENV === 'development' ? err.stack : undefined
-  }, 500)
-})
+app.use('*', cors())
 
 // Routes
-app.route('/auth', auth)
-app.route('/accounts', accounts)
-app.route('/transactions', transactions)
-app.route('/cards', cards)
-app.route('/notifications', notifications)
+app.route('/api/auth', auth)
+app.route('/api/accounts', accounts)
+app.route('/api/transactions', transactions)
+app.route('/api/cards', cards)
+app.route('/api/notifications', notifications)
 
 app.get('/', (c) => {
   return c.json({
     message: 'Welcome to SwiftPay API',
-    version: '1.1.0'
+    version: '1.0.0'
   })
 })
 
+export default app
 export default app
