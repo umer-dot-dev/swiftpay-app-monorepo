@@ -1,0 +1,10 @@
+{
+  "appId": "com.swiftpay.app",
+  "appName": "swiftpay",
+  "webDir": "www",
+  "server": {
+    "androidScheme": "http",
+    "url": "http://192.168.18.108:9500",
+    "cleartext": true
+  }
+}

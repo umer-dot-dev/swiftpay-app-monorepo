@@ -1,0 +1,4 @@
+-- Seed a default user
+-- Password is 'password123'
+-- Hash is generated using a common pattern for bcrypt-like (though it depends on the actual hash function used in the app)
+-- Wait, let's see what hash function is used.
