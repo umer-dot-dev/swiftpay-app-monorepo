@@ -3,3 +3,4 @@ node_modules/
 dist/
 .quasar/
 vendor/
+node_modules

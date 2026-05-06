@@ -7,6 +7,8 @@ import accounts from './routes/accounts'
 import transactions from './routes/transactions'
 import cards from './routes/cards'
 import notifications from './routes/notifications'
+import admin from './routes/admin'
+import push from './routes/push'
 
 const app = new Hono<{ Bindings: Bindings }>()
 
@@ -19,6 +21,8 @@ app.route('/accounts', accounts)
 app.route('/transactions', transactions)
 app.route('/cards', cards)
 app.route('/notifications', notifications)
+app.route('/admin', admin)
+app.route('/push', push)
 
 app.get('/', (c) => {
   return c.json({

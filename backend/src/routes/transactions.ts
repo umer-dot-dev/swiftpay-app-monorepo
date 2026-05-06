@@ -41,13 +41,15 @@ transactions.post('/transfer', zValidator('json', transferSchema), async (c) => 
   const userId = c.get('userId')
   const { recipientEmail, amount, description } = c.req.valid('json')
 
-  // 1. Find recipient
-  const recipient = await c.env.DB.prepare('SELECT id FROM users WHERE email = ?')
-    .bind(recipientEmail)
+  // 1. Find recipient (case-insensitive and trimmed)
+  const cleanEmail = recipientEmail.trim().toLowerCase()
+  const recipient = await c.env.DB.prepare('SELECT id FROM users WHERE LOWER(email) = ?')
+    .bind(cleanEmail)
     .first<{ id: string }>()
 
   if (!recipient) {
-    return c.json({ error: 'Not Found', message: 'Recipient not found' }, 404)
+    console.error(`Transfer failed: Recipient ${cleanEmail} not found in database`)
+    return c.json({ error: 'Not Found', message: 'Recipient not found. Please check the email address.' }, 404)
   }
 
   if (recipient.id === userId) {

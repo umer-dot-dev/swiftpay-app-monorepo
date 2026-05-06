@@ -5,6 +5,7 @@
     "dev": "wrangler dev --ip 0.0.0.0",
     "deploy": "wrangler deploy --minify",
     "migrate:prod": "wrangler d1 migrations apply swiftpay-db --remote",
+    "seed:prod": "wrangler d1 execute swiftpay-db --remote --file=seed_contacts.sql",
     "cf-typegen": "wrangler types --env-interface CloudflareBindings"
   },
   "dependencies": {

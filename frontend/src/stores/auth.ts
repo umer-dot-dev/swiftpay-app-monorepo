@@ -55,6 +55,13 @@ export const useAuthStore = defineStore('auth', () => {
     localStorage.removeItem('swiftpay_token')
   }
 
+  function updateStatus(newStatus: string) {
+    if (user.value) {
+      user.value.status = newStatus
+      localStorage.setItem('swiftpay_user', JSON.stringify(user.value))
+    }
+  }
+
   function disableBiometrics() {
     isBiometricEnabled.value = false
     localStorage.removeItem('swiftpay_biometric_enabled')
@@ -68,6 +75,7 @@ export const useAuthStore = defineStore('auth', () => {
     login,
     register,
     logout,
+    updateStatus,
     disableBiometrics
   }
 })

@@ -59,44 +59,54 @@ auth.post('/register', zValidator('json', registerSchema), async (c) => {
 
 // POST /login
 auth.post('/login', zValidator('json', loginSchema), async (c) => {
-  const { email, password } = c.req.valid('json')
+  try {
+    const { email, password } = c.req.valid('json')
 
-  const user = await c.env.DB.prepare('SELECT * FROM users WHERE email = ?')
-    .bind(email)
-    .first<User>()
+    const user = await c.env.DB.prepare('SELECT * FROM users WHERE email = ?')
+      .bind(email)
+      .first<User>()
 
-  if (!user) {
-    return c.json({ error: 'Unauthorized', message: 'Invalid credentials' }, 401)
-  }
-
-  const isValid = await comparePassword(password, user.password_hash)
-
-  if (!isValid) {
-    return c.json({ error: 'Unauthorized', message: 'Invalid credentials' }, 401)
-  }
-
-  const token = await generateToken(user.id, c.env.JWT_SECRET)
-
-  // Create login notification
-  await createNotification(
-    c.env.DB,
-    user.id,
-    'Login Recognized',
-    `A new login was recognized for your account at ${new Date().toLocaleString()}`,
-    'info'
-  )
-
-  return c.json({
-    message: 'Login successful',
-    token,
-    user: {
-      id: user.id,
-      full_name: user.full_name,
-      email: user.email,
-      balance: user.balance,
-      avatar_url: user.avatar_url
+    if (!user) {
+      return c.json({ error: 'Unauthorized', message: 'Invalid credentials' }, 401)
     }
-  })
+
+    const isValid = await comparePassword(password, user.password_hash)
+
+    if (!isValid) {
+      return c.json({ error: 'Unauthorized', message: 'Invalid credentials' }, 401)
+    }
+
+    const token = await generateToken(user.id, c.env.JWT_SECRET)
+
+    // Create login notification
+    try {
+      await createNotification(
+        c.env.DB,
+        user.id,
+        'Login Recognized',
+        `A new login was recognized for your account at ${new Date().toLocaleString()}`,
+        'info'
+      )
+    } catch (notifyError) {
+      console.error('Notification failed:', notifyError)
+      // Don't fail login if notification fails
+    }
+
+    return c.json({
+      message: 'Login successful',
+      token,
+      user: {
+        id: user.id,
+        full_name: user.full_name,
+        email: user.email,
+        balance: user.balance,
+        status: user.status,
+        avatar_url: user.avatar_url
+      }
+    })
+  } catch (e: any) {
+    return c.json({ error: 'Internal Server Error', message: e.message }, 500)
+  }
 })
 
 export default auth

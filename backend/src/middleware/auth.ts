@@ -13,6 +13,19 @@ export const authMiddleware = async (c: Context<{ Bindings: Bindings }>, next: N
   const userId = await verifyToken(token, c.env.JWT_SECRET)
 
   if (userId) {
+    // Check user status (Active vs Blocked)
+    const user = await c.env.DB.prepare('SELECT status FROM users WHERE id = ?')
+      .bind(userId)
+      .first<{ status: string }>()
+
+    if (user && user.status === 'blocked') {
+      return c.json({ 
+        error: 'Forbidden', 
+        message: 'Your account has been restricted. Please contact support.',
+        status: 'blocked'
+      }, 403)
+    }
+
     c.set('userId', userId)
     await next()
   } else {

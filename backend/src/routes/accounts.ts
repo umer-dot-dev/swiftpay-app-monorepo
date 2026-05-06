@@ -11,9 +11,9 @@ accounts.use('*', authMiddleware)
 accounts.get('/balance', async (c) => {
   const userId = c.get('userId')
   
-  const user = await c.env.DB.prepare('SELECT balance, currency FROM users WHERE id = ?')
+  const user = await c.env.DB.prepare('SELECT balance, currency, status FROM users WHERE id = ?')
     .bind(userId)
-    .first<{ balance: number, currency: string }>()
+    .first<{ balance: number, currency: string, status: string }>()
 
   if (!user) {
     return c.json({ error: 'Not Found', message: 'User not found' }, 404)
@@ -24,6 +24,7 @@ accounts.get('/balance', async (c) => {
     userId,
     balance: user.balance,
     currency: user.currency,
+    status: user.status,
     accountNumber: `**** **** **** ${userId.slice(-4)}`,
     accountType: 'Savings'
   })
@@ -33,7 +34,7 @@ accounts.get('/balance', async (c) => {
 accounts.get('/profile', async (c) => {
   const userId = c.get('userId')
   
-  const user = await c.env.DB.prepare('SELECT id, full_name, email, balance, currency, avatar_url FROM users WHERE id = ?')
+  const user = await c.env.DB.prepare('SELECT id, full_name, email, balance, currency, status, avatar_url FROM users WHERE id = ?')
     .bind(userId)
     .first<User>()
 

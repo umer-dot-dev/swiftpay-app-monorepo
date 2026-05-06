@@ -73,29 +73,89 @@
     </q-drawer>
 
     <q-page-container :class="$q.dark.isActive ? 'bg-grey-10' : 'bg-grey-1'">
+      <!-- Account Status Banners (Dynamic Alerts) -->
+      <transition
+        appear
+        enter-active-class="animated fadeInDown"
+        leave-active-class="animated fadeOutUp"
+      >
+        <div v-if="showRestrictedBanner" class="status-banner bg-red-1 text-red-9 shadow-1 q-py-sm q-px-md row items-center justify-center">
+          <q-icon name="report" size="20px" class="q-mr-sm" />
+          <div class="text-weight-bold">Account Restricted: Your access is limited. Please contact support.</div>
+        </div>
+      </transition>
+      
+      <transition
+        appear
+        enter-active-class="animated fadeInDown"
+        leave-active-class="animated fadeOutUp"
+      >
+        <div v-if="showRestoredBanner" class="status-banner bg-green-1 text-green-9 shadow-1 q-py-sm q-px-md row items-center justify-center">
+          <q-icon name="check_circle" size="20px" class="q-mr-sm" />
+          <div class="text-weight-bold">Account Restored: Your access has been fully restored.</div>
+        </div>
+      </transition>
+
       <router-view />
     </q-page-container>
   </q-layout>
 </template>
 
 <script setup lang="ts">
-import { computed, ref } from 'vue';
+import { computed, ref, watch, onMounted, onUnmounted } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { useRouter } from 'vue-router';
 import { useAuthStore } from 'src/stores/auth';
 import { useNotificationStore } from 'src/stores/notifications';
 import NotificationMenu from 'components/NotificationMenu.vue';
 
+import { useAccountStore } from 'src/stores/account';
+
 const { t } = useI18n({ useScope: 'global' });
 const router = useRouter();
 const authStore = useAuthStore();
+const accountStore = useAccountStore();
 const notificationStore = useNotificationStore();
 const leftDrawerOpen = ref(false);
+
+// Poll for status updates
+let statusInterval: ReturnType<typeof setInterval> | null = null;
+onMounted(() => {
+  statusInterval = setInterval(() => {
+    if (authStore.isAuthenticated) {
+      void accountStore.fetchDashboardData();
+    }
+  }, 10000);
+});
+
+onUnmounted(() => {
+  if (statusInterval) clearInterval(statusInterval);
+});
 
 const handleLogout = () => {
   authStore.logout();
   void router.push('/login');
 };
+
+const showRestrictedBanner = ref(false);
+const showRestoredBanner = ref(false);
+
+watch(() => authStore.user?.status, (newStatus, oldStatus) => {
+  // Skip the initial check on page load
+  if (!oldStatus) return;
+  
+  if (oldStatus === 'active' && newStatus === 'blocked') {
+    showRestrictedBanner.value = true;
+    setTimeout(() => {
+      showRestrictedBanner.value = false;
+    }, 5000);
+  } else if (oldStatus === 'blocked' && newStatus === 'active') {
+    showRestoredBanner.value = true;
+    setTimeout(() => {
+      showRestoredBanner.value = false;
+    }, 5000);
+  }
+});
 
 const navigationLinks = computed(() => [
   { title: t('dashboard'), icon: 'grid_view', link: '/' },
@@ -188,6 +248,12 @@ body.body--dark .nav-item {
 
 .tracking-widest {
   letter-spacing: 0.15em;
+}
+
+.status-banner {
+  z-index: 2000;
+  border-bottom: 1px solid rgba(0,0,0,0.05);
+  font-size: 0.95rem;
 }
 
 .opacity-30 {

@@ -44,6 +44,15 @@ export async function request(path: string, options: RequestInit = {}) {
     window.location.href = '/login';
   }
 
+  if (response.status === 403 && data.status === 'blocked') {
+    const storedUser = localStorage.getItem('swiftpay_user');
+    if (storedUser) {
+      const user = JSON.parse(storedUser);
+      user.status = 'blocked';
+      localStorage.setItem('swiftpay_user', JSON.stringify(user));
+    }
+  }
+
   if (!response.ok) {
     throw new Error(data.message || data.error || 'Something went wrong');
   }

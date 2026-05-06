@@ -31,11 +31,33 @@ notifications.patch('/:id/read', async (c) => {
   return c.json({ success: true })
 })
 
+// PATCH /read-all - Mark all as read
+notifications.patch('/read-all', async (c) => {
+  const userId = c.get('userId')
+
+  await c.env.DB.prepare('UPDATE notifications SET is_read = 1 WHERE user_id = ?')
+    .bind(userId)
+    .run()
+
+  return c.json({ success: true })
+})
+
 // DELETE /clear - Delete all read notifications
 notifications.delete('/clear', async (c) => {
   const userId = c.get('userId')
 
   await c.env.DB.prepare('DELETE FROM notifications WHERE user_id = ? AND is_read = 1')
+    .bind(userId)
+    .run()
+
+  return c.json({ success: true })
+})
+
+// DELETE /all - Delete all notifications
+notifications.delete('/all', async (c) => {
+  const userId = c.get('userId')
+
+  await c.env.DB.prepare('DELETE FROM notifications WHERE user_id = ?')
     .bind(userId)
     .run()
 

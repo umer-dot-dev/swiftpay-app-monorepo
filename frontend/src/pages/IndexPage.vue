@@ -6,7 +6,7 @@
         <div class="text-subtitle2 text-sm-subtitle1 text-grey-7">Ready to manage your finances today?</div>
       </div>
       <q-btn round flat icon="notifications" size="lg" class="gt-sm">
-        <q-badge floating color="red" rounded border />
+        <q-badge v-if="notificationStore.unreadCount > 0" floating color="red" rounded border :label="notificationStore.unreadCount" />
         <!-- Notification Dropdown -->
         <NotificationMenu />
       </q-btn>
@@ -41,10 +41,12 @@ import BalanceCard from '../components/dashboard/BalanceCard.vue'
 import TransactionList from '../components/dashboard/TransactionList.vue'
 import QuickActions from '../components/dashboard/QuickActions.vue'
 import NotificationMenu from '../components/NotificationMenu.vue'
+import { useNotificationStore } from '../stores/notifications'
 
 const { t } = useI18n()
 const accountStore = useAccountStore()
 const authStore = useAuthStore()
+const notificationStore = useNotificationStore()
 
 onMounted(async () => {
   await accountStore.fetchDashboardData()

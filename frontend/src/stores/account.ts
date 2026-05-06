@@ -15,9 +15,22 @@ export const useAccountStore = defineStore('account', () => {
       const balanceData = await request('/accounts/balance')
       balance.value = balanceData.balance
       accountNumber.value = balanceData.accountNumber
+      
+      // Sync status to auth store
+      const authStore = (await import('./auth')).useAuthStore()
+      authStore.updateStatus(balanceData.status)
 
       transactions.value = await request('/transactions')
     } catch (error) {
+      // If request failed, check if it's because we are blocked
+      const authStore = (await import('./auth')).useAuthStore()
+      const storedUser = localStorage.getItem('swiftpay_user')
+      if (storedUser) {
+        const user = JSON.parse(storedUser)
+        if (user.status === 'blocked') {
+          authStore.updateStatus('blocked')
+        }
+      }
       console.error('Failed to fetch dashboard data', error)
     } finally {
       isLoading.value = false

@@ -150,7 +150,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { useQuasar } from 'quasar'
 import { useAccountStore } from 'src/stores/account'
@@ -164,16 +164,44 @@ const search = ref('')
 const amount = ref('')
 
 interface Contact {
-  id: number;
+  id: string | number;
   name: string;
   info: string;
+  email: string;
   avatar: string;
   lastSent?: string;
-  email: string;
 }
 
 const selectedContact = ref<Contact | null>(null)
 const showAmountDialog = ref(false)
+const users = ref<Contact[]>([])
+
+interface RawUser { id: string | number; full_name: string; email: string; }
+
+async function fetchUsers() {
+  try {
+    const data = await request('/admin/users')
+    users.value = (data as RawUser[]).map(u => ({
+      id: u.id,
+      name: u.full_name,
+      info: `@${u.full_name.toLowerCase().replace(' ', '_')}`,
+      email: u.email,
+      avatar: `https://ui-avatars.com/api/?name=${encodeURIComponent(u.full_name)}&background=random`,
+      lastSent: 'Contact'
+    }))
+  } catch (error) {
+    console.error('Failed to fetch users:', error)
+  }
+}
+
+const recentContacts = computed(() => {
+  if (!search.value) return users.value.slice(0, 4)
+  const s = search.value.toLowerCase()
+  return users.value.filter(u => 
+    u.name.toLowerCase().includes(s) || 
+    u.email.toLowerCase().includes(s)
+  )
+})
 
 const selectContact = (contact: Contact) => {
   selectedContact.value = contact
@@ -187,13 +215,6 @@ const handleSwipe = () => {
   }
 }
 
-const recentContacts: Contact[] = [
-  { id: 1, name: 'Alice Johnson', info: '@alice_j', email: 'alice@example.com', avatar: 'https://cdn.quasar.dev/img/avatar1.jpg', lastSent: '2 days ago' },
-  { id: 2, name: 'Bob Smith', info: '@bob_smith', email: 'bob@example.com', avatar: 'https://cdn.quasar.dev/img/avatar2.jpg', lastSent: '5 days ago' },
-  { id: 3, name: 'Charlie Brown', info: '@brown_c', email: 'charlie@example.com', avatar: 'https://cdn.quasar.dev/img/avatar3.jpg', lastSent: '1 week ago' },
-  { id: 4, name: 'David Wilson', info: '@david_w', email: 'david@example.com', avatar: 'https://cdn.quasar.dev/img/avatar4.jpg', lastSent: '2 weeks ago' }
-]
-
 const addDigit = (n: string) => {
   if (n === '.' && amount.value.includes('.')) return
   if (amount.value === '0') amount.value = n
@@ -203,6 +224,10 @@ const addDigit = (n: string) => {
 const backspace = () => {
   amount.value = amount.value.slice(0, -1)
 }
+
+onMounted(() => {
+  void fetchUsers()
+})
 
 const processTransfer = async () => {
   if (!amount.value || amount.value === '0' || !selectedContact.value) return

@@ -3,6 +3,8 @@
   "appName": "swiftpay",
   "webDir": "www",
   "server": {
-    "androidScheme": "https"
+    "androidScheme": "http",
+    "url": "http://192.168.18.108:9500",
+    "cleartext": true
   }
 }
