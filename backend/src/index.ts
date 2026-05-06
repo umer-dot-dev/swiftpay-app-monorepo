@@ -14,11 +14,11 @@ const app = new Hono<{ Bindings: Bindings }>()
 app.use('*', cors())
 
 // Routes
-app.route('/api/auth', auth)
-app.route('/api/accounts', accounts)
-app.route('/api/transactions', transactions)
-app.route('/api/cards', cards)
-app.route('/api/notifications', notifications)
+app.route('/auth', auth)
+app.route('/accounts', accounts)
+app.route('/transactions', transactions)
+app.route('/cards', cards)
+app.route('/notifications', notifications)
 
 app.get('/', (c) => {
   return c.json({
