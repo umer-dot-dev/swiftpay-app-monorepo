@@ -81,6 +81,9 @@ export async function comparePassword(password: string, storedHash: string): Pro
  * Generates a JWT token for a user
  */
 export async function generateToken(userId: string, secret: string): Promise<string> {
+  if (!secret || secret.trim().length === 0) {
+    throw new Error('JWT_SECRET is not configured on the server')
+  }
   const secretKey = encoder.encode(secret)
   return await new SignJWT({ sub: userId })
     .setProtectedHeader({ alg: 'HS256' })
