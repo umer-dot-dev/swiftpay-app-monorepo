@@ -13,6 +13,7 @@ export interface User {
   password_hash: string
   balance: number
   currency: string
+  status: string
   avatar_url?: string
   created_at: string
 }

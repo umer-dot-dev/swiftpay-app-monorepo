@@ -8,6 +8,7 @@ CREATE TABLE IF NOT EXISTS users (
     password_hash TEXT NOT NULL,
     balance REAL DEFAULT 0.00,
     currency TEXT DEFAULT 'PKR',
+    status TEXT DEFAULT 'active',
     avatar_url TEXT,
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP
 );
